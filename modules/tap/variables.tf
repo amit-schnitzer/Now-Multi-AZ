@@ -1,4 +1,10 @@
-
+variable "multi_az_settings" {
+  type = "list"
+  default = [
+    {}
+  ]
+}
+/*
 // --- VPC Network Configuration ---
 variable "vpc_id" {
   type = string
@@ -70,3 +76,4 @@ variable "version_license" {
   description =  "version and license"
   default = "R80.40-PAYG-NGTX-GW"
 }
+*/

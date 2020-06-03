@@ -3,8 +3,11 @@ provider "aws" {
 }
 
 module "tap" {
-  source = "../../modules/tap"
-
+  source = "modules/tap"
+  multi_az_settings = var.multi_az_settings
+  
+  
+  /*
   // --- VPC Network Configuration ---
   vpc_id = var.vpc_id
   external_subnet_id = var.external_subnet_id
@@ -27,3 +30,4 @@ module "tap" {
   // --- Check Point Settings ---
   version_license = var.version_license
 }
+*/
