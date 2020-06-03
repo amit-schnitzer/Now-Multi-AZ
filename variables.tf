@@ -7,10 +7,15 @@ data "aws_region" "current" {
   name = var.region
 }
 variable "multi_az_settings" {
-  type =  list(map)
+  type =  list(map(map(string)))
   default = [
     {}
   ]
+}
+variable "version_license" {
+  type = string
+  description =  "version and license"
+  default = "R80.40-PAYG-NGTP-GW"
 }
 /*
 // --- VPC Network Configuration ---

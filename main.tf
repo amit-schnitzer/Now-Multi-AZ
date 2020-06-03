@@ -26,8 +26,7 @@ module "tap" {
   instance_type = var.instance_type
   key_name = var.key_name
   // password_hash = var.password_hash
-
+*/
   // --- Check Point Settings ---
   version_license = var.version_license
 }
-*/

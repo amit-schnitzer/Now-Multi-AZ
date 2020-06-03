@@ -1,8 +1,13 @@
 variable "multi_az_settings" {
-  type = list(map)
+  type = list(map(map(string)))
   default = [
     {}
   ]
+}
+variable "version_license" {
+  type = string
+  description =  "version and license"
+  default = "R80.40-PAYG-NGTX-GW"
 }
 /*
 // --- VPC Network Configuration ---
