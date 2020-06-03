@@ -1,8 +1,7 @@
 
 module "amis" {
   source = "../amis"
-  for_each = var.multi_az_settings
-  version_license = each.cp_conf.version_license
+  version_license = var.version_license
 }
 
 resource "aws_security_group" "tap_sg" {

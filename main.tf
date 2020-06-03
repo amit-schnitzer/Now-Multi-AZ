@@ -3,7 +3,7 @@ provider "aws" {
 }
 
 module "tap" {
-  source = "modules/tap"
+  source = "./modules/tap"
   multi_az_settings = var.multi_az_settings
   
   
