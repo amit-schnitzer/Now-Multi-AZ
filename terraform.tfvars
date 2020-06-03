@@ -3,7 +3,7 @@ region = "eu-central-1"
 
 multi_az_settings = [
   {
-    vpc_conf = 
+    vpc_conf =
     {
       vpc_id = "vpc-0d05af9829abf147e",
       external_subnet_id = "subnet-0221efcb83144a821",
@@ -20,7 +20,7 @@ multi_az_settings = [
       }
       schedule_scan_interval = 10
     }
-    ec2_conf = 
+    ec2_conf =
     {
       instance_name = "TAP-GW-AZ1"
       instance_type = "c5.xlarge"
@@ -30,13 +30,13 @@ multi_az_settings = [
         env1 = "AZ1"
       }
     }
-    cp_conf = 
+    cp_conf =
     {
       version_license = "R80.40-BYOL-GW"
     }
    }
 ]
-/* 
+/*
 // --- VPC Network Configuration ---
 vpc_id = "vpc-xyz123"
 external_subnet_id = "subnet-xyz123"

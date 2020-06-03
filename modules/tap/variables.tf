@@ -1,5 +1,5 @@
 variable "multi_az_settings" {
-  type = "list"
+  type = list(map)
   default = [
     {}
   ]

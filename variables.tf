@@ -7,7 +7,7 @@ data "aws_region" "current" {
   name = var.region
 }
 variable "multi_az_settings" {
-  type = "list"
+  type =  list(map)
   default = [
     {}
   ]
