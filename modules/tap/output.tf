@@ -3,13 +3,13 @@ output "Deployment" {
 }
 
 output "tap-gateway_instance_id" {
-  value = aws_instance.tap_gateway.id
+  value = aws_instance.tap_gateway[0].id
 }
 output "tap-gateway_instance_name" {
-  value = aws_instance.tap_gateway.tags.Name
+  value = aws_instance.tap_gateway[0].tags.Name
 }
 output "tap-gateway_instance_public_ip" {
-  value = aws_instance.tap_gateway.public_ip
+  value = aws_instance.tap_gateway[0].public_ip
 }
 
 output "tap-traffic_mirror_target_id" {
@@ -20,7 +20,7 @@ output "tap-traffic_mirror_filter_id" {
 }
 
 output "tap-tap_lambda_name" {
-  value = aws_lambda_function.tap_lambda.function_name
+  value = aws_lambda_function.tap_lambda[0].function_name
 }
 output "tap-tap_lambda_description" {
   value = "The TAP lambda creates traffic-mirror sessions for all mirrorable and non-blacklisted instances in the TAP gateway's vpc. This lambda is invoked during TAP deployment, scheduled events and when an ec2 instance state is changed to Running"

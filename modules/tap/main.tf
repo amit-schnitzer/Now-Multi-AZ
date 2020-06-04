@@ -5,9 +5,8 @@ module "amis" {
 }
 
 resource "aws_security_group" "tap_sg" {
-  for_each = var.multi_az_settings
-  description = format("%s Security group", each.vpc_conf.resources_tag_name != "" ? each.vpc_conf.resources_tag_name : each.ec2_conf.instance_name)
-  vpc_id = each.vpc_conf.vpc_id
+  description = format("%s Security group", var.multi_az_settings[0].vpc_conf.resources_tag_name != "" ? var.multi_az_settings[0].vpc_conf.resources_tag_name : var.multi_az_settings[0].ec2_conf.instance_name)
+  vpc_id = var.multi_az_settings[0].vpc_conf.vpc_id
   egress {
     from_port = 0
     to_port = 0
@@ -33,37 +32,38 @@ resource "aws_security_group" "tap_sg" {
     to_port = 4789
     cidr_blocks = ["0.0.0.0/0"]
   }
-  name = format("%s_SecurityGroup", each.vpc_conf.resources_tag_name != "" ? each.vpc_conf.resources_tag_name : each.ec2_conf.instance_name) // Group name
+  name = format("%s_SecurityGroup", var.multi_az_settings[0].vpc_conf.resources_tag_name != "" ? var.multi_az_settings[0].vpc_conf.resources_tag_name : var.multi_az_settings[0].ec2_conf.instance_name) // Group name
   tags = {
-    Name = format("%s_SecurityGroup", each.vpc_conf.resources_tag_name != "" ? each.vpc_conf.resources_tag_name : each.ec2_conf.instance_name) // Resource name
+    Name = format("%s_SecurityGroup", var.multi_az_settings[0].vpc_conf.resources_tag_name != "" ? var.multi_az_settings[0].vpc_conf.resources_tag_name : var.multi_az_settings[0].ec2_conf.instance_name) // Resource name
   }
 }
 resource "aws_network_interface" "external-eni" {
-  for_each = var.multi_az_settings
-  subnet_id = each.vpc_conf.external_subnet_id
+  count = length(var.multi_az_settings)
+  subnet_id = var.multi_az_settings[count.index].vpc_conf.external_subnet_id
   security_groups = [aws_security_group.tap_sg.id]
   description = "eth0"
   source_dest_check = false
   tags = {
-    Name = format("%s-external_network_interface", each.vpc_conf.resources_tag_name != "" ? each.vpc_conf.resources_tag_name : each.ec2_conf.instance_name)
+    Name = format("%s-external_network_interface", var.multi_az_settings[count.index].vpc_conf.resources_tag_name != "" ? var.multi_az_settings[count.index].vpc_conf.resources_tag_name : var.multi_az_settings[count.index].ec2_conf.instance_name)
   }
 }
 resource "aws_network_interface" "internal-eni" {
-  for_each = var.multi_az_settings
-  subnet_id = each.vpc_conf.internal_subnet_id
+  count = length(var.multi_az_settings)
+  subnet_id = var.multi_az_settings[count.index].vpc_conf.internal_subnet_id
   security_groups = [aws_security_group.tap_sg.id]
   description = "eth1"
   source_dest_check = false
   tags = {
-    Name = format("%s-internal_network_interface", each.vpc_conf.resources_tag_name != "" ? each.vpc_conf.resources_tag_name : each.ec2_conf.instance_name)
+    Name = format("%s-internal_network_interface", var.multi_az_settings[count.index].vpc_conf.resources_tag_name != "" ? var.multi_az_settings[count.index].vpc_conf.resources_tag_name : var.multi_az_settings[count.index].ec2_conf.instance_name)
   }
 }
 resource "aws_eip" "eip" {
+  count = length(aws_network_interface.external-eni)
   vpc = true
-  network_interface = aws_network_interface.external-eni.id
+  network_interface = aws_network_interface.external-eni[count.index].id
 }
 resource "aws_instance" "tap_gateway" {
-  for_each = var.multi_az_settings
+  count = length(var.multi_az_settings)
   depends_on = [
     aws_network_interface.external-eni,
     aws_network_interface.internal-eni,
@@ -71,9 +71,9 @@ resource "aws_instance" "tap_gateway" {
   ]
 
   ami = module.amis.ami_id
-  tags = merge({Name = each.ec2_conf.instance_name}, each.ec2_conf.instance_tags)
-  instance_type = each.ec2_conf.instance_type
-  key_name = each.ec2_conf.key_name
+  tags = merge({Name = var.multi_az_settings[count.index].ec2_conf.instance_name}, var.multi_az_settings[count.index].ec2_conf.instance_tags)
+  instance_type = var.multi_az_settings[count.index].ec2_conf.instance_type
+  key_name = var.multi_az_settings[count.index].ec2_conf.key_name
 
   ebs_block_device {
     device_name = "/dev/xvda"
@@ -81,18 +81,18 @@ resource "aws_instance" "tap_gateway" {
     volume_size = 100
   }
   network_interface { // external
-    network_interface_id = aws_network_interface.external-eni.id
+    network_interface_id = aws_network_interface.external-eni[count.index].id
     device_index = 0
   }
   network_interface { // internal
-    network_interface_id = aws_network_interface.internal-eni.id
+    network_interface_id = aws_network_interface.internal-eni[count.index].id
     device_index = 1
   }
 
   user_data = templatefile("${path.module}/tap_user_data_script.sh", {
     // script's arguments
-    RegistrationKey = each.tap_conf.registration_key
-    VxlanIds = each.tap_conf.vxlan_id
+    RegistrationKey = var.multi_az_settings[count.index].tap_conf.registration_key
+    VxlanIds = var.multi_az_settings[count.index].tap_conf.vxlan_id
   })
 }
 
@@ -101,19 +101,19 @@ resource "random_id" "stack_uuid" {
   byte_length = 5
 }
 resource "aws_cloudformation_stack" "tap_target_and_filter" {
-  for_each = var.multi_az_settings
+  count = length(var.multi_az_settings)
   depends_on = [aws_instance.tap_gateway]
   name = format("traffic-mirror-filter-and-target-%s", random_id.stack_uuid.hex)
 
   parameters = {
-    MirroringNetworkInterfaceId = aws_network_interface.internal-eni.id
-    EnvironmentPrefix = each.vpc_conf.resources_tag_name
+    MirroringNetworkInterfaceId = aws_network_interface.internal-eni[count.index].id
+    EnvironmentPrefix = var.multi_az_settings[count.index].vpc_conf.resources_tag_name
   }
   template_url = "https://cgi-cfts.s3.amazonaws.com/utils/tap_target_and_filter.yaml"
 }
 locals {
-  trafficMirrorTargetId = aws_cloudformation_stack.tap_target_and_filter.outputs["TrafficMirrorTargetId"]
-  trafficMirrorFilterId = aws_cloudformation_stack.tap_target_and_filter.outputs["TrafficMirrorFilterId"]
+  trafficMirrorTargetId = aws_cloudformation_stack.tap_target_and_filter[0].outputs["TrafficMirrorTargetId"]
+  trafficMirrorFilterId = aws_cloudformation_stack.tap_target_and_filter[0].outputs["TrafficMirrorFilterId"]
 }
 
 // Lambdas
@@ -162,10 +162,10 @@ data "archive_file" "tap_lambda_zip" {
   output_path = "${path.module}/tap_lambda.zip"
 }
 locals {
-  blacklisted_tag_pairs_joined = join(":", [for tag_key in keys(each.tap_conf.blacklist_tags): join("=", [tag_key, each.tap_conf.blacklist_tags[tag_key]])])
+  blacklisted_tag_pairs_joined = join(":", [for tag_key in keys(var.multi_az_settings[0].tap_conf.blacklist_tags): join("=", [tag_key, var.multi_az_settings[0].tap_conf.blacklist_tags[tag_key]])])
 }
 resource "aws_lambda_function" "tap_lambda" {
-  for_each = var.multi_az_settings
+  count = length(var.multi_az_settings)
   depends_on = [aws_instance.tap_gateway]
   function_name = format("chkp_tap_lambda-%s", random_id.tap_lambda_uuid.hex)
   description = "The TAP lambda creates traffic mirror sessions with the TAP gateway instance, and removes them for blacklisted instances in the VPC."
@@ -179,18 +179,18 @@ resource "aws_lambda_function" "tap_lambda" {
 
   environment {
     variables = {
-      VPC_ID = each.vpc_conf.vpc_id
-      GW_ID = aws_instance.tap_gateway.id
+      VPC_ID = var.multi_az_settings[count.index].vpc_conf.vpc_id
+      GW_ID = aws_instance.tap_gateway[count.index].id
       TM_TARGET_ID = local.trafficMirrorTargetId
       TM_FILTER_ID = local.trafficMirrorFilterId
-      VNI = each.tap_conf.vxlan_id
+      VNI = var.multi_az_settings[count.index].tap_conf.vxlan_id
       TAP_BLACKLIST = local.blacklisted_tag_pairs_joined
     }
   }
 }
 // CloudWatch event - EC2 state change to Running
 resource "aws_cloudwatch_event_rule" "on_ec2_running_state" {
-  for_each = var.multi_az_settings
+  count = length(var.multi_az_settings)
   name_prefix = "tap_ec2_running_rule"
   description = "Invoked when an instance changes its state to Running"
   event_pattern = <<PATTERN
@@ -210,37 +210,42 @@ resource "aws_cloudwatch_event_rule" "on_ec2_running_state" {
   PATTERN
 }
 resource "aws_cloudwatch_event_target" "associate_ec2_rule" {
-  rule = aws_cloudwatch_event_rule.on_ec2_running_state.name
-  arn = aws_lambda_function.tap_lambda.arn
+  count = length(var.multi_az_settings)
+  rule = aws_cloudwatch_event_rule.on_ec2_running_state[count.index].name
+  arn = aws_lambda_function.tap_lambda[count.index].arn
 }
 resource "aws_lambda_permission" "allow_ec2_rule_to_call_tap_lambda" {
+  count = length(var.multi_az_settings)
   statement_id = "AllowExecutionFromEC2CloudWatch"
   action = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.tap_lambda.function_name
+  function_name = aws_lambda_function.tap_lambda[count.index].function_name
   principal = "events.amazonaws.com"
-  source_arn = aws_cloudwatch_event_rule.on_ec2_running_state.arn
+  source_arn = aws_cloudwatch_event_rule.on_ec2_running_state[count.index].arn
 }
 // CloudWatch event - Scheduled
 resource "aws_cloudwatch_event_rule" "on_schedule" {
   name_prefix = "tap_schedule_rule"
   description = "Invoked every <schedule_scan_interval> minutes"
-  schedule_expression = format("rate(%d minutes)", each.tap_conf.schedule_scan_interval)
+  schedule_expression = format("rate(%d minutes)", var.multi_az_settings[0].tap_conf.schedule_scan_interval)
 }
 resource "aws_cloudwatch_event_target" "associate_schedule_rule" {
+  count = length(var.multi_az_settings)
   rule = aws_cloudwatch_event_rule.on_schedule.name
-  arn = aws_lambda_function.tap_lambda.arn
+  arn = aws_lambda_function.tap_lambda[count.index].arn
 }
 resource "aws_lambda_permission" "allow_schedule_rule_to_call_tap_lambda" {
+  count = length(var.multi_az_settings)
   statement_id = "AllowExecutionFromScheduledCloudWatch"
   action = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.tap_lambda.function_name
+  function_name = aws_lambda_function.tap_lambda[count.index].function_name
   principal = "events.amazonaws.com"
   source_arn = aws_cloudwatch_event_rule.on_schedule.arn
 }
 // TAP Lambda Invocation
 data "aws_lambda_invocation" "tap_lambda_invocation" {
+  count = length(var.multi_az_settings)
   depends_on = [aws_lambda_function.tap_lambda]
-  function_name = aws_lambda_function.tap_lambda.function_name
+  function_name = aws_lambda_function.tap_lambda[count.index].function_name
   input = <<JSON
   {
     "deployment_invocation": "true"

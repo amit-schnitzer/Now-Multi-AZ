@@ -3,15 +3,13 @@ region = "eu-central-1"
 
 multi_az_settings = [
   {
-    "vpc_conf" =
-    {
-      "vpc_id" = "vpc-0d05af9829abf147e",
-      "external_subnet_id" = "subnet-0221efcb83144a821",
-      "internal_subnet_id" = "subnet-0adc4ab97573ec5ed",
+    "vpc_conf" ={
+      "vpc_id" = "vpc-0d05af9829abf147e"
+      "external_subnet_id" = "subnet-0221efcb83144a821"
+      "internal_subnet_id" = "subnet-0adc4ab97573ec5ed"
       "resources_tag_name" = "mulAZ-1"
     }
-    "tap_conf" =
-    {
+    "tap_conf" ={
       "registration_key" = "25:25:25:25:25:25"
       "vxlan_id" = 10
       "blacklist_tags" = {
@@ -20,8 +18,7 @@ multi_az_settings = [
       }
       "schedule_scan_interval" = 10
     }
-    "ec2_conf" =
-    {
+    "ec2_conf" ={
       "instance_name" = "TAP-GW-AZ1"
       "instance_type" = "c5.xlarge"
       "key_name" = "frankfurt"
