@@ -4,9 +4,9 @@ region = "eu-central-1"
 multi_az_settings = [
   {
     "vpc_conf" ={
-      "vpc_id" = "vpc-0d05af9829abf147e"
-      "external_subnet_id" = "subnet-0221efcb83144a821"
-      "internal_subnet_id" = "subnet-0adc4ab97573ec5ed"
+      "vpc_id" = "vpc-0e4009e6e056da19c"
+      "external_subnet_id" = "subnet-073044e89f7c81080"
+      "internal_subnet_id" = "subnet-0996d77f2b6f9ee45"
       "resources_tag_name" = "mulAZ-1"
     }
     "tap_conf" ={
