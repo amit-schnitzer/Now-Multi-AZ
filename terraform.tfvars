@@ -39,7 +39,7 @@ multi_az_settings = [
       "registration_key" = "26:26:26:26:26:26"
       "vxlan_id" = 10
       "blacklist_tags" = {
-        "env2" = "AZ1"
+        "env1" = "AZ1"
         "env3" = "AZ3"
       }
       "schedule_scan_interval" = 10
@@ -50,7 +50,7 @@ multi_az_settings = [
       "key_name" = "frankfurt"
       "password_hash" = "abcdefghijklmnop"
       "instance_tags" = {
-        "env1" = "AZ2"
+        "env2" = "AZ2"
       }
     }
   },
@@ -65,8 +65,8 @@ multi_az_settings = [
       "registration_key" = "27:27:27:27:27:27"
       "vxlan_id" = 10
       "blacklist_tags" = {
-        "env2" = "AZ1"
-        "env3" = "AZ2"
+        "env1" = "AZ1"
+        "env2" = "AZ2"
       }
       "schedule_scan_interval" = 10
     }
@@ -76,7 +76,7 @@ multi_az_settings = [
       "key_name" = "frankfurt"
       "password_hash" = "abcdefghijklmnop"
       "instance_tags" = {
-        "env1" = "AZ3"
+        "env3" = "AZ3"
       }
     }
   }
