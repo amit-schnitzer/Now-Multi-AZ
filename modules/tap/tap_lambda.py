@@ -68,8 +68,11 @@ def get_lambda_blacklist_tags_list():
 
 
 def is_instance_blacklisted(instance_id):
-    instance_tags = ec2_client.describe_instances(
-        InstanceIds=[instance_id])['Reservations'][0]['Instances'][0]['Tags']
+    try:
+        instance_tags = ec2_client.describe_instances(
+            InstanceIds=[instance_id])['Reservations'][0]['Instances'][0]['Tags']
+    except KeyError as e:
+        return False
     for tag in instance_tags:
         if tag in get_lambda_blacklist_tags_list():
             return True

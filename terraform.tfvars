@@ -13,6 +13,7 @@ multi_az_settings = [
       "registration_key" = "25:25:25:25:25:25"
       "vxlan_id" = 10
       "blacklist_tags" = {
+        "env1" = "AZ1"
         "env2" = "AZ2"
         "env3" = "AZ3"
       }
@@ -40,6 +41,7 @@ multi_az_settings = [
       "vxlan_id" = 10
       "blacklist_tags" = {
         "env1" = "AZ1"
+        "env2" = "AZ2"
         "env3" = "AZ3"
       }
       "schedule_scan_interval" = 10
@@ -67,6 +69,8 @@ multi_az_settings = [
       "blacklist_tags" = {
         "env1" = "AZ1"
         "env2" = "AZ2"
+        "env3" = "AZ3"
+
       }
       "schedule_scan_interval" = 10
     }
