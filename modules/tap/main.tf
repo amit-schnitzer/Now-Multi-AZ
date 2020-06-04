@@ -112,7 +112,7 @@ resource "aws_cloudformation_stack" "tap_target_and_filter" {
   template_url = "https://cgi-cfts.s3.amazonaws.com/utils/tap_target_and_filter.yaml"
 }
 locals {
-  trafficMirrorTargetId = aws_cloudformation_stack.tap_target_and_filter[0].outputs["TrafficMirrorTargetId"]
+  trafficMirrorTargetId = [for target in aws_cloudformation_stack.tap_target_and_filter: target[0].outputs["TrafficMirrorTargetId"]]
   trafficMirrorFilterId = aws_cloudformation_stack.tap_target_and_filter[0].outputs["TrafficMirrorFilterId"]
 }
 
@@ -162,7 +162,7 @@ data "archive_file" "tap_lambda_zip" {
   output_path = "${path.module}/tap_lambda.zip"
 }
 locals {
-  blacklisted_tag_pairs_joined = join(":", [for tag_key in keys(var.multi_az_settings[0].tap_conf.blacklist_tags): join("=", [tag_key, var.multi_az_settings[0].tap_conf.blacklist_tags[tag_key]])])
+  blacklisted_tag_pairs_joined = [for tag in var.multi_az_settings:join(":", [for tag_key in keys(tag.tap_conf.blacklist_tags): join("=", [tag_key, var.tag.tap_conf.blacklist_tags[tag_key]])])]
 }
 resource "aws_lambda_function" "tap_lambda" {
   count = length(var.multi_az_settings)
@@ -184,7 +184,7 @@ resource "aws_lambda_function" "tap_lambda" {
       TM_TARGET_ID = local.trafficMirrorTargetId
       TM_FILTER_ID = local.trafficMirrorFilterId
       VNI = var.multi_az_settings[count.index].tap_conf.vxlan_id
-      TAP_BLACKLIST = local.blacklisted_tag_pairs_joined
+      TAP_BLACKLIST = local.blacklisted_tag_pairs_joined[count.index]
     }
   }
 }
