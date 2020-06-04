@@ -98,12 +98,13 @@ resource "aws_instance" "tap_gateway" {
 
 // Create CloudFormation Stack
 resource "random_id" "stack_uuid" {
+  count = length(var.multi_az_settings)
   byte_length = 5
 }
 resource "aws_cloudformation_stack" "tap_target_and_filter" {
   count = length(var.multi_az_settings)
   depends_on = [aws_instance.tap_gateway]
-  name = format("traffic-mirror-filter-and-target-%s", random_id.stack_uuid.hex)
+  name = format("traffic-mirror-filter-and-target-%s", random_id.stack_uuid[count.index].hex)
 
   parameters = {
     MirroringNetworkInterfaceId = aws_network_interface.internal-eni[count.index].id
@@ -113,7 +114,7 @@ resource "aws_cloudformation_stack" "tap_target_and_filter" {
 }
 locals {
   trafficMirrorTargetId = [for target in aws_cloudformation_stack.tap_target_and_filter: target.outputs["TrafficMirrorTargetId"]]
-  trafficMirrorFilterId = [for target in aws_cloudformation_stack.tap_target_and_filter:target.outputs["TrafficMirrorFilterId"]
+  trafficMirrorFilterId = [for target in aws_cloudformation_stack.tap_target_and_filter:target.outputs["TrafficMirrorFilterId"]]
 }
 
 // Lambdas

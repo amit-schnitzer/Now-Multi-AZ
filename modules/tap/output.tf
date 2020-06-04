@@ -30,7 +30,7 @@ output "blacklisted_tags" {
 }
 
 output "tap-termination_lambda_name" {
-  value = aws_lambda_function.tap_termination_lambda.function_name
+  value = aws_lambda_function.tap_termination_lambda[0].function_name
 }
 output "tap-termination_lambda_description" {
   value = "The 'Termination' lambda deletes traffic-mirror sessions for all instances in the TAP gateway's vpc. Should be invoked manually before destroying the environment in order for terraform destroy to finish successfully."
