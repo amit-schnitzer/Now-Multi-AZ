@@ -104,7 +104,7 @@ resource "random_id" "stack_uuid" {
 resource "aws_cloudformation_stack" "tap_target_and_filter" {
   count = length(var.multi_az_settings)
   depends_on = [aws_instance.tap_gateway]
-  name = format("traffic-mirror-filter-and-target-%s", random_id.stack_uuid[count.index].hex)
+  name = format("traffic-mirror-filter-and-target-%s", random_id[count.index].stack_uuid[count.index].hex)
 
   parameters = {
     MirroringNetworkInterfaceId = aws_network_interface.internal-eni[count.index].id
@@ -155,6 +155,7 @@ resource "aws_iam_role_policy" "tap_lambda_policy" {
 }
 // Lambda Function
 resource "random_id" "tap_lambda_uuid" {
+  count = length(var.multi_az_settings)
   byte_length = 5
 }
 data "archive_file" "tap_lambda_zip" {
@@ -278,6 +279,7 @@ resource "aws_iam_role_policy" "tap_termination_policy" {
 }
 // Lambda Function
 resource "random_id" "tap_termination_lambda_uuid" {
+  count = length(var.multi_az_settings)
   byte_length = 5
 }
 data "archive_file" "tap_termination_lambda_zip" {
@@ -287,7 +289,7 @@ data "archive_file" "tap_termination_lambda_zip" {
 }
 resource "aws_lambda_function" "tap_termination_lambda" {
   count = length(var.multi_az_settings)
-  function_name = format("chkp_tap_termination_lambda-%s", random_id.tap_termination_lambda_uuid.hex)
+  function_name = format("chkp_tap_termination_lambda-%s", random_id[count.index].tap_termination_lambda_uuid.hex)
   description = "Manually invoke the termination lambda before destroying the TAP environment. The termination lambda deletes all mirror sessions to the TAP gateway in order to allow destruction."
 
   filename = "${path.module}/tap_termination_lambda.zip"
